@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Studio Analysis Dashboard | 14 Tracks</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --bg-color: #0f1115;
+            --card-bg: #16191f;
+            --text-main: #e0e6ed;
+            --text-muted: #94a3b8;
+            --accent: #3b82f6;
+            
+            /* Colores Visualizador */
+            --intro: #A0AEC0; 
+            --hook: #F56565;
+            --verse: #4299E1;
+            --bridge: #ECC94B;
+            --part-a: #9F7AEA; 
+            
+            /* CORRECCIÓN TIPOGRAFÍA */
+            --font-main: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 50px 20px;
+        }
+
+        /* HEADER */
+        header { margin-bottom: 50px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 20px; }
+        h1 { font-size: 2.2rem; font-weight: 800; margin: 0; letter-spacing: -1px; color: #fff; }
+        .subtitle { color: var(--text-muted); margin-top: 5px; }
+
+        /* TRACK CARD */
+        .track-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 40px;
+            border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: transform 0.2s ease;
+        }
+
+        .track-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .track-title h2 { margin: 0; font-size: 1.4rem; color: #fff; }
+        .track-genre { color: var(--text-muted); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; display: block; margin-top: 5px; }
+
+        /* VISUALIZER BAR (MEJORADO) */
+        .visualizer {
+            display: flex;
+            height: 32px;
+            width: 100%;
+            border-radius: 8px; /* Bordes un poco más suaves */
+            overflow: visible; /* Permitir que el efecto pop salga del contenedor */
+            background: #000;
+            margin-bottom: 25px;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.5); /* Profundidad interna */
+        }
+        
+        .section {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: 700;
+            color: rgba(255,255,255,0.95);
+            border-right: 1px solid rgba(0,0,0,0.1);
+            white-space: nowrap;
+            overflow: hidden;
+            
+            /* MEJORA UX: Glassmorphism & Transición */
+            opacity: 0.9;
+            position: relative;
+            cursor: help;
+            transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        
+        /* EFECTO POP / HOVER */
+        .section:hover {
+            opacity: 1;
+            filter: brightness(1.2);
+            transform: scale(1.05);
+            z-index: 10;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            border-radius: 4px; /* Pequeño borde al hacer pop */
+            border-right: none;
+        }
+        
+        /* DATA COLORS */
+        .bg-intro { background: var(--intro); color: #1a202c; }
+        .bg-hook { background: var(--hook); }
+        .bg-verse { background: var(--verse); }
+        .bg-bridge { background: var(--bridge); color: #1a202c; }
+        .bg-part-a { background: var(--part-a); }
+
+        /* AUDIO ANALYSIS SECTION */
+        .analysis-box {
+            background: rgba(0,0,0,0.2);
+            border-radius: 12px;
+            padding: 20px;
+            font-size: 0.95rem;
+        }
+        .analysis-title { font-size: 1rem; font-weight: 700; color: #fff; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
+        .section-title { color: var(--accent); font-size: 0.85rem; font-weight: 700; text-transform: uppercase; margin-top: 15px; margin-bottom: 8px; letter-spacing: 0.5px; }
+        .analysis-content p { margin: 0 0 8px 0; color: #cbd5e1; }
+        .timestamp-list { font-family: monospace; background: rgba(255,255,255,0.03); padding: 10px; border-radius: 8px; margin-top: 5px; }
+        .timestamp-row { display: flex; justify-content: space-between; margin-bottom: 4px; border-bottom: 1px dashed rgba(255,255,255,0.1); padding-bottom: 2px;}
+        .ts-time { color: var(--accent); font-weight: bold; }
+        .ts-desc { color: #a0aec0; }
+        .not-analyzed { text-align: center; color: #555; padding: 20px; font-style: italic; border-top: 1px dashed #333; margin-top: 40px;}
+
+        /* RESPONSIVIDAD MÓVIL CRÍTICA */
+        @media (max-width: 600px) {
+            .container { padding: 30px 15px; }
+            h1 { font-size: 1.8rem; }
+            
+            .section { 
+                font-size: 8px; 
+                padding: 0 2px;
+            }
+            
+            /* Ocultar texto en secciones pequeñas (flex: 4) para que no se rompa */
+            .section[style*="flex: 4"], .section[style*="flex:4"] {
+                color: transparent; 
+            }
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Studio Analysis Dashboard</h1>
+        <div class="subtitle">Análisis Estructural y de Audio para 14 Tracks</div>
+    </header>
+
+    <div class="track-card">
+        <div class="track-header">
+            <div class="track-title">
+                <h2>1. Leave Me Now</h2>
+                <span class="track-genre">Detroit / New Jazz Hybrid</span>
+            </div>
+        </div>
+
+        <div class="visualizer">
+            <div class="section bg-intro" style="flex:4" title="Intro (4 Barras)">INTRO</div>
+            <div class="section bg-hook" style="flex:8" title="Hook (8 Barras)">HOOK</div>
+            <div class="section bg-verse" style="flex:16" title="Verse (16 Barras)">VERSE</div>
+            <div class="section bg-bridge" style="flex:4" title="Bridge (4 Barras)">BR</div>
+            <div class="section bg-hook" style="flex:8" title="Hook (8 Barras)">HOOK</div>
+            <div class="section bg-intro" style="flex:8" title="Outro (8 Barras)">OUT</div>
+        </div>
+
+        <div class="analysis-box">
+            <div class="analysis-title">🎧 Análisis de Audio: "Leave Me Now"</div>
+            
+            <div class="section-title">1. Ficha Técnica (Sonic DNA)</div>
+            <div class="analysis-content">
+                <p><strong>BPM Real:</strong> 156 BPM (Tempo rápido, estándar en Detroit/New Jazz).</p>
+                <p><strong>Key (Tonalidad):</strong> Fa Menor (F Minor). Escala oscura pero energética.</p>
+                <p><strong>Vibe:</strong> "Glitchy", "Toxic", "Flexing", "Video Game".</p>
+            </div>
+
+            <div class="section-title">2. Instrumentación Detectada</div>
+            <div class="analysis-content">
+                <p><strong>Melodía (Lead):</strong> Sintetizador tipo "Sine/Bell" con efecto de Bitcrusher. Suena retro/corrupto.</p>
+                <p><strong>Bajo (808):</strong> Spinz 808 corto y distorsionado (clipped). Golpea seco para el flow rápido.</p>
+                <p><strong>Drums:</strong> Hi-hats de dos pasos. Off-beat snare creando "rebote" Detroit.</p>
+                <p><strong>FX:</strong> Uso de silencios abruptos (gaps) para enfatizar entradas.</p>
+            </div>
+
+            <div class="section-title">3. Corrección Estructural (Audio vs Visual)</div>
+            <div class="timestamp-list">
+                <div class="timestamp-row"><span class="ts-time">0:00 - 0:12</span> <span class="ts-desc">Intro (Solo Melodía) - 4 Barras</span></div>
+                <div class="timestamp-row"><span class="ts-time">0:12 - 0:37</span> <span class="ts-desc">Hook (Entrada 808) - 8 Barras</span></div>
+                <div class="timestamp-row"><span class="ts-time">0:37 - 1:26</span> <span class="ts-desc">Verse (Bajo simplificado) - 16 Barras</span></div>
+                <div class="timestamp-row"><span class="ts-time">1:26 - 1:38</span> <span class="ts-desc">Bridge (Melodía filtrada) - 4 Barras</span></div>
+                <div class="timestamp-row"><span class="ts-time">1:38 - 2:03</span> <span class="ts-desc">Hook Final - 8 Barras</span></div>
+                <div class="timestamp-row"><span class="ts-time">2:03 - Fin</span> <span class="ts-desc">Outro (Fade out) - 4/8 Barras</span></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="track-card">
+        <div class="track-header">
+            <div class="track-title">
+                <h2>2. FAVELA (Drill)</h2>
+                <span class="track-genre">Afro Drill / Brazilian Funk</span>
+            </div>
+        </div>
+
+        <div class="visualizer">
+            <div class="section bg-intro" style="flex:4" title="Intro (4 Barras)">IN</div>
+            <div class="section bg-verse" style="flex:16" title="Verse 1 (16 Barras)">VERSE 1</div>
+            <div class="section bg-hook" style="flex:8" title="Hook (8 Barras)">HOOK</div>
+            <div class="section bg-bridge" style="flex:4" title="Bridge/Break (4 Barras)">BR</div>
+            <div class="section bg-verse" style="flex:12" title="Verse 2 (12 Barras)">VERSE 2</div>
+            <div class="section bg-intro" style="flex:4" title="Outro (4 Barras)">OUT</div>
+        </div>
+
+        <div class="analysis-box">
+            <div class="analysis-title">🎧 Análisis de Audio: "FAVELA"</div>
+            
+            <div class="section-title">1. Ficha Técnica (Sonic DNA)</div>
+            <div class="analysis-content">
+                <p><strong>BPM Real:</strong> 133 BPM (Tempo medio-rápido).</p>
+                <p><strong>Key (Tonalidad):</strong> Sol # Menor (G# Minor). Tonalidad común para drill de guitarra.</p>
+                <p><strong>Vibe:</strong> "Tropical", "Dark", "Fusion", "Energetic".</p>
+            </div>
+
+            <div class="section-title">2. Instrumentación Detectada</div>
+            <div class="analysis-content">
+                <p><strong>Melodía (Lead):</strong> Guitarra acústica sampleada con reverberación procesada.</p>
+                <p><strong>Drums:</strong> Hi-hats en tresillos (Drill) mezclados con percusión Afro. Cambio a "Tamborzão" en la segunda mitad.</p>
+                <p><strong>Bajo (808):</strong> Slides agresivos típicos del Drill UK/NY.</p>
+            </div>
+
+            <div class="section-title">3. Corrección Estructural (Audio vs Visual)</div>
+            <div class="timestamp-list">
+                <div class="timestamp-row"><span class="ts-time">0:00 - 0:13</span> <span class="ts-desc">Intro (Guitarra + Shaker) - 4 Barras</span></div>
+                <div class="timestamp-row"><span class="ts-time">0:13 - 1:12</span> <span class="ts-desc">Verse 1 (Drill Energy) - 16 Barras</span></div>
+                <div class="timestamp-row"><span class="ts-time">1:12 - 1:40</span> <span class="ts-desc">Hook/Transición (Funk Vibes) - 8 Barras</span></div>
+                <div class="timestamp-row"><span class="ts-time">1:40 - 1:55</span> <span class="ts-desc">Break (Silencio parcial) - 4 Barras</span></div>
+                <div class="timestamp-row"><span class="ts-time">1:55 - 2:37</span> <span class="ts-desc">Verse 2 (Vuelta a Drill) - 12 Barras</span></div>
+                <div class="timestamp-row"><span class="ts-time">2:37 - Fin</span> <span class="ts-desc">Outro - 4 Barras</span></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="track-card">
+        <div class="track-header">
+            <div class="track-title">
+                <h2>3. PISCES</h2>
+                <span class="track-genre">Brazilian Phonk / Baile</span>
+            </div>
+        </div>
+
+        <div class="visualizer">
+            <div class="section bg-intro" style="flex:4" title="Intro (4 Barras)">IN</div>
+            <div class="section bg-hook" style="flex:8" title="Hook (8 Barras)">HOOK</div>
+            <div class="section bg-verse" style="flex:16" title="Verse (16 Barras)">VERSE</div>
+            <div class="section bg-bridge" style="flex:4" title="Bridge (4 Barras)">BR</div>
+            <div class="section bg-hook" style="flex:8" title="Hook (8 Barras)">HOOK</div>
+            <div class="section bg-intro" style="flex:8" title="Outro (8 Barras)">OUT</div>
+        </div>
+
+        <div class="analysis-box">
+            <div class="analysis-title">🎧 Análisis de Audio: "PISCES"</div>
+            
+            <div class="section-title">1. Ficha Técnica (Sonic DNA)</div>
+            <div class="analysis-content">
+                <p><strong>BPM Real:</strong> 126 BPM (Lento y pesado, espacio para baile).</p>
+                <p><strong>Key (Tonalidad):</strong> Sol Menor (G Minor).</p>
+                <p><strong>Vibe:</strong> "Bouncy", "Minimal", "Exotic", "Party".</p>
+            </div>
+
+            <div class="section-title">2. Instrumentación Detectada</div>
+            <div class="analysis-content">
+                <p><strong>Melodía (Lead):</strong> Vocal chop procesado e hipnótico con reverb largo.</p>
+                <p><strong>Drums:</strong> Ritmo clásico "Tamborzão" (Bombo seco + Caja metálica sincopada).</p>
+                <p><strong>Bajo:</strong> 808 corto y profundo siguiendo el patrón del bombo.</p>
+            </div>
+
+            <div class="section-title">3. Corrección Estructural (Audio vs Visual)</div>
+            <div class="timestamp-list">
+                <div class="timestamp-row"><span class="ts-time">0:00 - 0:15</span> <span class="ts-desc">Intro (Vocal Atmosphere) - 4 Barras</span></div>
+                <div class="timestamp-row"><span class="ts-time">0:15 - 0:45</span> <span class="ts-desc">Hook/Drop (Full Ritmo) - 8 Barras</span></div>
+                <div class="timestamp-row"><span class="ts-time">0:45 - 1:16</span> <span class="ts-desc">Verse (Percusión ligera) - 16 Barras</span></div>
+                <div class="timestamp-row"><span class="ts-time">1:16 - 1:31</span> <span class="ts-desc">Bridge (Filtro Low Pass) - 4 Barras</span></div>
+                <div class="timestamp-row"><span class="ts-time">1:31 - 2:02</span> <span class="ts-desc">Hook Final - 8 Barras</span></div>
+                <div class="timestamp-row"><span class="ts-time">2:02 - Fin</span> <span class="ts-desc">Outro - 8 Barras</span></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="track-card">
+        <div class="track-header">
+            <div class="track-title">
+                <h2>4. Joga Bonito</h2>
+                <span class="track-genre">Funk / Merengue Fusion</span>
+            </div>
+        </div>
+
+        <div class="visualizer">
+            <div class="section bg-intro" style="flex:4" title="Intro (4 Barras)">IN</div>
+            <div class="section bg-part-a" style="flex:8" title="Part A: Funk (8 Barras)">A (FUNK)</div>
+            <div class="section bg-bridge" style="flex:4" title="Break (4 Barras)">BREAK</div>
+            <div class="section bg-part-a" style="flex:8" title="Part B: Club (8 Barras)">B (CLUB)</div>
+            <div class="section bg-intro" style="flex:4" title="Outro (4 Barras)">OUT</div>
+        </div>
+
+        <div class="analysis-box">
+            <div class="analysis-title">🎧 Análisis de Audio: "Joga Bonito"</div>
+            
+            <div class="section-title">1. Ficha Técnica (Sonic DNA)</div>
+            <div class="analysis-content">
+                <p><strong>BPM Real:</strong> 132 BPM (Tempo híbrido Club/Funk).</p>
+                <p><strong>Key (Tonalidad):</strong> La Menor (A Minor).</p>
+                <p><strong>Vibe:</strong> "Carnival", "Sporty", "Hype", "Latin Club".</p>
+            </div>
+
+            <div class="section-title">2. Instrumentación Detectada</div>
+            <div class="analysis-content">
+                <p><strong>Melodía:</strong> Sintetizadores brillantes y samples vocales brasileños ("pum pum pum").</p>
+                <p><strong>Percusión:</strong> Sección A (Funk Tamborzão) vs Sección B (House/Merengue con güira).</p>
+                <p><strong>Bajo:</strong> Sub-bajo 808 muy contundente.</p>
+            </div>
+
+            <div class="section-title">3. Corrección Estructural (Audio vs Visual)</div>
+            <div class="timestamp-list">
+                <div class="timestamp-row"><span class="ts-time">0:00 - 0:13</span> <span class="ts-desc">Intro (Vocal chops) - 4 Barras</span></div>
+                <div class="timestamp-row"><span class="ts-time">0:13 - 1:12</span> <span class="ts-desc">Part A (Funk Energy) - 16 Barras</span></div>
+                <div class="timestamp-row"><span class="ts-time">1:12 - 1:26</span> <span class="ts-desc">Break/Bridge (Build-up) - 4 Barras</span></div>
+                <div class="timestamp-row"><span class="ts-time">1:26 - 2:25</span> <span class="ts-desc">Part B (Club Mix) - 16 Barras</span></div>
+                <div class="timestamp-row"><span class="ts-time">2:25 - Fin</span> <span class="ts-desc">Outro - 4 Barras</span></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="track-card">
+        <div class="track-header">
+            <div class="track-title">
+                <h2>5. Find A Way</h2>
+                <span class="track-genre">West Coast / Detroit</span>
+            </div>
+        </div>
+
+        <div class="visualizer">
+            <div class="section bg-intro" style="flex:4" title="Intro (4 Barras)">IN</div>
+            <div class="section bg-hook" style="flex:8" title="Hook (8 Barras)">HOOK</div>
+            <div class="section bg-verse" style="flex:16" title="Verse (16 Barras)">VERSE</div>
+            <div class="section bg-hook" style="flex:8" title="Hook (8 Barras)">HOOK</div>
+            <div class="section bg-intro" style="flex:4" title="Outro (4 Barras)">OUT</div>
+        </div>
+
+        <div class="analysis-box">
+            <div class="analysis-title">🎧 Análisis de Audio: "Find A Way"</div>
+            
+            <div class="section-title">1. Ficha Técnica (Sonic DNA)</div>
+            <div class="analysis-content">
+                <p><strong>BPM Real:</strong> 100 BPM (Groove relajado).</p>
+                <p><strong>Key (Tonalidad):</strong> Sol Menor (G Minor).</p>
+                <p><strong>Vibe:</strong> "Smooth", "Cruising", "Gangsta", "Nostalgic".</p>
+            </div>
+
+            <div class="section-title">2. Instrumentación Detectada</div>
+            <div class="analysis-content">
+                <p><strong>Melodía (Lead):</strong> "Worm Lead" (Sinte agudo G-Funk) + Pianos eléctricos.</p>
+                <p><strong>Bajo:</strong> Synth Bass profundo y rodante (estilo California).</p>
+                <p><strong>Drums:</strong> Claps secos con reverb corto y Hi-hats con swing.</p>
+            </div>
+
+            <div class="section-title">3. Corrección Estructural (Audio vs Visual)</div>
+            <div class="timestamp-list">
+                <div class="timestamp-row"><span class="ts-time">0:00 - 0:12</span> <span class="ts-desc">Intro (Lead + Piano) - 4 Barras</span></div>
+                <div class="timestamp-row"><span class="ts-time">0:12 - 0:31</span> <span class="ts-desc">Hook (Full Groove) - 8 Barras</span></div>
+                <div class="timestamp-row"><span class="ts-time">0:31 - 1:10</span> <span class="ts-desc">Verse (Espacio vocal) - 16 Barras</span></div>
+                <div class="timestamp-row"><span class="ts-time">1:10 - 1:29</span> <span class="ts-desc">Hook (Worm Lead Return) - 8 Barras</span></div>
+                <div class="timestamp-row"><span class="ts-time">1:29 - Fin</span> <span class="ts-desc">Outro (Fade out) - 4 Barras</span></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="track-card">
+        <div class="track-header">
+            <div class="track-title">
+                <h2>6. Alone</h2>
+                <span class="track-genre">Afro R&B / Tems Type</span>
+            </div>
+        </div>
+
+        <div class="visualizer">
+            <div class="section bg-intro" style="flex:4" title="Intro (4 Barras)">IN</div>
+            <div class="section bg-hook" style="flex:8" title="Hook (8 Barras)">HOOK</div>
+            <div class="section bg-verse" style="flex:16" title="Verse (16 Barras)">VERSE</div>
+            <div class="section bg-bridge" style="flex:4" title="Bridge (4 Barras)">BR</div>
+            <div class="section bg-hook" style="flex:8" title="Hook (8 Barras)">HOOK</div>
+            <div class="section bg-intro" style="flex:8" title="Outro (8 Barras)">OUT</div>
+        </div>
+
+        <div class="analysis-box">
+            <div class="analysis-title">🎧 Análisis de Audio: "Alone"</div>
+            
+            <div class="section-title">1. Ficha Técnica (Sonic DNA)</div>
+            <div class="analysis-content">
+                <p><strong>BPM Real:</strong> 108 BPM (Lento y sensual).</p>
+                <p><strong>Key (Tonalidad):</strong> Mi Menor (E Minor).</p>
+                <p><strong>Vibe:</strong> "Sad", "Emotional", "Romantic", "Late Night".</p>
+            </div>
+
+            <div class="section-title">2. Instrumentación Detectada</div>
+            <div class="analysis-content">
+                <p><strong>Melodía:</strong> Piano eléctrico Rhodes suave con pads atmosféricos.</p>
+                <p><strong>Bajo:</strong> Reese Bass (Sinte sostenido y vibrante) en lugar de 808.</p>
+                <p><strong>Drums:</strong> Shakers constantes (Afrobeat) y Rimshot con reverb.</p>
+            </div>
+
+            <div class="section-title">3. Corrección Estructural (Audio vs Visual)</div>
+            <div class="timestamp-list">
+                <div class="timestamp-row"><span class="ts-time">0:00 - 0:17</span> <span class="ts-desc">Intro (Rhodes + Shaker) - 4 Barras</span></div>
+                <div class="timestamp-row"><span class="ts-time">0:17 - 0:35</span> <span class="ts-desc">Hook (Reese Bass Entry) - 8 Barras</span></div>
+                <div class="timestamp-row"><span class="ts-time">0:35 - 1:11</span> <span class="ts-desc">Verse 1 (Minimalista) - 16 Barras</span></div>
+                <div class="timestamp-row"><span class="ts-time">1:11 - 1:28</span> <span class="ts-desc">Hook (Intensidad media) - 8 Barras</span></div>
+                <div class="timestamp-row"><span class="ts-time">1:28 - 2:22</span> <span class="ts-desc">Verse 2 + Hook Final - 24 Barras</span></div>
+                <div class="timestamp-row"><span class="ts-time">2:22 - Fin</span> <span class="ts-desc">Outro - 8 Barras</span></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="track-card">
+        <div class="track-header">
+            <div class="track-title">
+                <h2>7. Truth</h2>
+                <span class="track-genre">Afro R&B / Dark Funk</span>
+            </div>
+        </div>
+
+        <div class="visualizer">
+            <div class="section bg-intro" style="flex:4" title="Intro (4 Barras)">IN</div>
+            <div class="section bg-verse" style="flex:16" title="Verse (16 Barras)">VERSE</div>
+            <div class="section bg-hook" style="flex:8" title="Drop (8 Barras)">DROP</div>
+            <div class="section bg-verse" style="flex:16" title="Verse (16 Barras)">VERSE</div>
+            <div class="section bg-intro" style="flex:4" title="Outro (4 Barras)">OUT</div>
+        </div>
+
+        <div class="analysis-box">
+            <div class="analysis-title">🎧 Análisis de Audio: "Truth"</div>
+            
+            <div class="section-title">1. Ficha Técnica (Sonic DNA)</div>
+            <div class="analysis-content">
+                <p><strong>BPM Real:</strong> 132 BPM (Agresivo).</p>
+                <p><strong>Key (Tonalidad):</strong> Do Menor (C Minor).</p>
+                <p><strong>Vibe:</strong> "Intense", "Dark Club", "Hypnotic".</p>
+            </div>
+
+            <div class="section-title">2. Instrumentación Detectada</div>
+            <div class="analysis-content">
+                <p><strong>Melodía:</strong> Synth Pluck oscuro y repetitivo (tensión).</p>
+                <p><strong>Percusión:</strong> Contraste entre Shakers Afro suaves y "Tamborzão" Funk pesado.</p>
+                <p><strong>Bajo:</strong> 808 Distorsionado en Drops vs Sinte suave en versos.</p>
+            </div>
+
+            <div class="section-title">3. Corrección Estructural (Audio vs Visual)</div>
+            <div class="timestamp-list">
+                <div class="timestamp-row"><span class="ts-time">0:00 - 0:14</span> <span class="ts-desc">Intro (Pluck + Shaker) - 4 Barras</span></div>
+                <div class="timestamp-row"><span class="ts-time">0:14 - 1:12</span> <span class="ts-desc">Hook/Verse (R&B Vibe) - 24 Barras</span></div>
+                <div class="timestamp-row"><span class="ts-time">1:12 - 1:41</span> <span class="ts-desc">Drop/Funk Section - 12 Barras</span></div>
+                <div class="timestamp-row"><span class="ts-time">1:41 - 2:11</span> <span class="ts-desc">Verse 2 (Calma) - 12 Barras</span></div>
+                <div class="timestamp-row"><span class="ts-time">2:11 - 2:40</span> <span class="ts-desc">Outro (Fade) - 8 Barras</span></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="track-card">
+        <div class="track-header">
+            <div class="track-title">
+                <h2>8. Love Me Back</h2>
+                <span class="track-genre">New Jazz</span>
+            </div>
+        </div>
+
+        <div class="visualizer">
+            <div class="section bg-intro" style="flex:4" title="Intro (4 Barras)">IN</div>
+            <div class="section bg-hook" style="flex:8" title="Hook (8 Barras)">HOOK</div>
+            <div class="section bg-verse" style="flex:32" title="Verse Extendido (32 Barras)">VERSE</div>
+            <div class="section bg-bridge" style="flex:4" title="Bridge (4 Barras)">BR</div>
+            <div class="section bg-hook" style="flex:8" title="Hook (8 Barras)">HOOK</div>
+            <div class="section bg-intro" style="flex:16" title="Outro (16 Barras)">OUT</div>
+        </div>
+
+        <div class="analysis-box">
+            <div class="analysis-title">🎧 Análisis de Audio: "Love Me Back"</div>
+            
+            <div class="section-title">1. Ficha Técnica (Sonic DNA)</div>
+            <div class="analysis-content">
+                <p><strong>BPM Real:</strong> 152 BPM.</p>
+                <p><strong>Key (Tonalidad):</strong> Re # Menor (D# Minor).</p>
+                <p><strong>Vibe:</strong> "Glitched", "Psychedelic", "Nostalgic", "Digital".</p>
+            </div>
+
+            <div class="section-title">2. Instrumentación Detectada</div>
+            <div class="analysis-content">
+                <p><strong>Melodía:</strong> Synth principal con Bitcrusher (sonido 8-bits roto).</p>
+                <p><strong>Bajo:</strong> Spinz 808 Clipped (Distorsionado).</p>
+                <p><strong>Arreglo:</strong> Gaps (silencios totales) rítmicos muy marcados.</p>
+            </div>
+
+            <div class="section-title">3. Corrección Estructural (Audio vs Visual)</div>
+            <div class="timestamp-list">
+                <div class="timestamp-row"><span class="ts-time">0:00 - 0:13</span> <span class="ts-desc">Intro (Bitcrushed Synth) - 4 Barras</span></div>
+                <div class="timestamp-row"><span class="ts-time">0:13 - 0:38</span> <span class="ts-desc">Hook (Drop 808) - 8 Barras</span></div>
+                <div class="timestamp-row"><span class="ts-time">0:38 - 1:28</span> <span class="ts-desc">Verse (Extendido/Trance) - 32 Barras</span></div>
+                <div class="timestamp-row"><span class="ts-time">1:28 - 1:53</span> <span class="ts-desc">Bridge (Melodía Sola) - 8 Barras</span></div>
+                <div class="timestamp-row"><span class="ts-time">1:53 - 2:18</span> <span class="ts-desc">Hook Final - 8 Barras</span></div>
+                <div class="timestamp-row"><span class="ts-time">2:18 - 3:17</span> <span class="ts-desc">Outro Largo (Fade) - 16+ Barras</span></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="track-card">
+        <div class="track-header">
+            <div class="track-title">
+                <h2>9. Morning & Night</h2>
+                <span class="track-genre">Detroit / Orchestral Trap</span>
+            </div>
+        </div>
+
+        <div class="visualizer">
+            <div class="section bg-intro" style="flex:4" title="Intro (4 Barras)">IN</div>
+            <div class="section bg-hook" style="flex:8" title="Hook (8 Barras)">HOOK</div>
+            <div class="section bg-verse" style="flex:16" title="Verse (16 Barras)">VERSE</div>
+            <div class="section bg-hook" style="flex:8" title="Hook (8 Barras)">HOOK</div>
+            <div class="section bg-intro" style="flex:4" title="Outro (4 Barras)">OUT</div>
+        </div>
+
+        <div class="analysis-box">
+            <div class="analysis-title">🎧 Análisis de Audio: "Morning & Night"</div>
+            
+            <div class="section-title">1. Ficha Técnica (Sonic DNA)</div>
+            <div class="analysis-content">
+                <p><strong>BPM Real:</strong> 162 BPM (Muy rápido/Urgente).</p>
+                <p><strong>Key (Tonalidad):</strong> La Menor (A Minor).</p>
+                <p><strong>Vibe:</strong> "Action", "Suspense", "Dark", "Cinematic".</p>
+            </div>
+
+            <div class="section-title">2. Instrumentación Detectada</div>
+            <div class="analysis-content">
+                <p><strong>Melodía:</strong> Strings (Cuerdas) orquestales en Staccato (rápido y cortante).</p>
+                <p><strong>Batería:</strong> Snare fuera de tiempo (Detroit) y Hi-hats agresivos.</p>
+                <p><strong>Bajo:</strong> 808 Spinz corto.</p>
+            </div>
+
+            <div class="section-title">3. Corrección Estructural (Audio vs Visual)</div>
+            <div class="timestamp-list">
+                <div class="timestamp-row"><span class="ts-time">0:00 - 0:11</span> <span class="ts-desc">Intro (Cuerdas solas) - 4 Barras</span></div>
+                <div class="timestamp-row"><span class="ts-time">0:11 - 0:35</span> <span class="ts-desc">Hook (Batería Full) - 8 Barras</span></div>
+                <div class="timestamp-row"><span class="ts-time">0:35 - 0:59</span> <span class="ts-desc">Verse (Sin 808) - 16 Barras</span></div>
+                <div class="timestamp-row"><span class="ts-time">0:59 - 1:11</span> <span class="ts-desc">Bridge/Transición - 4 Barras</span></div>
+                <div class="timestamp-row"><span class="ts-time">1:11 - 1:34</span> <span class="ts-desc">Hook Final - 8 Barras</span></div>
+                <div class="timestamp-row"><span class="ts-time">1:34 - Fin</span> <span class="ts-desc">Outro - 4 Barras</span></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="not-analyzed">Tracks pendientes de análisis de audio (Solo estructura visual disponible)</div>
+
+    <div class="track-card">
+        <div class="track-header">
+            <div class="track-title">
+                <h2>10. Breath</h2>
+                <span class="track-genre">YN Jay Type</span>
+            </div>
+        </div>
+        <div class="visualizer">
+            <div class="section bg-intro" style="flex:4" title="Intro (4 Barras)">IN</div>
+            <div class="section bg-hook" style="flex:8" title="Hook (8 Barras)">HOOK</div>
+            <div class="section bg-verse" style="flex:16" title="Verse (16 Barras)">VERSE</div>
+            <div class="section bg-hook" style="flex:8" title="Hook (8 Barras)">HOOK</div>
+            <div class="section bg-intro" style="flex:8" title="Outro (8 Barras)">OUT</div>
+        </div>
+    </div>
+
+    <div class="track-card">
+        <div class="track-header">
+            <div class="track-title">
+                <h2>11. Dominica</h2>
+                <span class="track-genre">Afro R&B</span>
+            </div>
+        </div>
+        <div class="visualizer">
+            <div class="section bg-intro" style="flex:4" title="Intro (4 Barras)">IN</div>
+            <div class="section bg-hook" style="flex:8" title="Hook (8 Barras)">HOOK</div>
+            <div class="section bg-verse" style="flex:16" title="Verse (16 Barras)">VERSE</div>
+            <div class="section bg-hook" style="flex:8" title="Hook (8 Barras)">HOOK</div>
+            <div class="section bg-intro" style="flex:8" title="Outro (8 Barras)">OUT</div>
+        </div>
+    </div>
+
+    <div class="track-card">
+        <div class="track-header">
+            <div class="track-title">
+                <h2>12. Jazz Avenue</h2>
+                <span class="track-genre">Detroit Jazz</span>
+            </div>
+        </div>
+        <div class="visualizer">
+            <div class="section bg-intro" style="flex:4" title="Intro (4 Barras)">IN</div>
+            <div class="section bg-hook" style="flex:8" title="Hook (8 Barras)">HOOK</div>
+            <div class="section bg-verse" style="flex:16" title="Verse (16 Barras)">VERSE</div>
+            <div class="section bg-hook" style="flex:8" title="Hook (8 Barras)">HOOK</div>
+            <div class="section bg-intro" style="flex:4" title="Outro (4 Barras)">OUT</div>
+        </div>
+    </div>
+
+    <div class="track-card">
+        <div class="track-header">
+            <div class="track-title">
+                <h2>13. Street Prayers</h2>
+                <span class="track-genre">Meek Mill Type</span>
+            </div>
+        </div>
+        <div class="visualizer">
+            <div class="section bg-intro" style="flex:4" title="Intro (4 Barras)">IN</div>
+            <div class="section bg-verse" style="flex:24" title="Verse 1 (24 Barras)">VERSE 1</div>
+            <div class="section bg-hook" style="flex:8" title="Hook (8 Barras)">HOOK</div>
+            <div class="section bg-verse" style="flex:16" title="Verse 2 (16 Barras)">VERSE 2</div>
+            <div class="section bg-hook" style="flex:8" title="Hook (8 Barras)">HOOK</div>
+            <div class="section bg-intro" style="flex:4" title="Outro (4 Barras)">OUT</div>
+        </div>
+    </div>
+
+    <div class="track-card">
+        <div class="track-header">
+            <div class="track-title">
+                <h2>14. FAVELA (Afro R&B)</h2>
+                <span class="track-genre">R&B / Funk</span>
+            </div>
+        </div>
+        <div class="visualizer">
+            <div class="section bg-intro" style="flex:4" title="Intro (4 Barras)">IN</div>
+            <div class="section bg-hook" style="flex:8" title="Hook (8 Barras)">HOOK</div>
+            <div class="section bg-verse" style="flex:16" title="Verse (16 Barras)">VERSE</div>
+            <div class="section bg-bridge" style="flex:4" title="Bridge (4 Barras)">BR</div>
+            <div class="section bg-hook" style="flex:8" title="Hook (8 Barras)">HOOK</div>
+            <div class="section bg-intro" style="flex:8" title="Outro (8 Barras)">OUT</div>
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>
